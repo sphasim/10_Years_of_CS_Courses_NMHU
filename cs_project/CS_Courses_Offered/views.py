@@ -11,7 +11,10 @@ def index(request):
 
 def graph_data(request):
 	# get all data from offering model
-	class_offered = Offering.objects.all()
+
+	class_offered = Offering.objects.filter( 
+    a_semester__id = 640  ).select_related()
+	# results = Semester.objects.include(field1__in=inner_qs)
 	# create a dictionary of allthe data in class_offered
 	data = serializers.serialize("json", class_offered)
 
