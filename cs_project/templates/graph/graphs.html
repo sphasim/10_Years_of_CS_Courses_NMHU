@@ -9,75 +9,127 @@
 	<body>
 		 <h1>Semester Offered</h1>
 		 <div id = "chartContainer"></div>
-		 {% for classes in semester_classes %}
-		 	<p>{{ classes.id }}
-		 	{{ classes.a_course }}
-		 	{{ classes.a_semester }}
-		 	{{ classes.crn_number }}
-		 	{{ classes.section_number }}
-		 	{{ classes.max_enrollment }}
-		 	{{ classes.act_enrollment }}
-		 {% endfor %}</p>
-		<script src="http://d3js.org/d3.v3.js"></script>
+		 <!-- {% for classes in semester_classes %}
+		 {{ classes.id }}, {{ classes.a_semester }}, {{ classes.a_course }}, {{ classes.crn_number }}, {{ classes.section_number }}, {{ classes.max_enrollment }}, {{ classes.act_enrollment }}<br>
+		 {% endfor %} -->
+<!-- 
+		 {% for semester in semesters %}
+		 	{{ semester.term_description }}<br>
+		 {% endfor %} -->
+		 <script src="http://d3js.org/d3.v3.js"></script>
 		<script>
-			var width = 600,
-			height = 600;
+
+		var semesters = [];
+				{% for semester in semesters %}
+				 	semesters.push('{{semester.term_description}}')
+				 {% endfor %}
+
+		var classes_offered = [];
+				{% for classes in semester_classes %}
+		 		classes_offered.push(['{{ classes.a_semester }}', '{{ classes.a_course }}', {{ classes.crn_number }}, {{ classes.section_number }}, {{ classes.max_enrollment }}, {{ classes.act_enrollment }}])
+		 		{% endfor %}
+		 console.log(classes_offered);
+
+		var classes_json = [];
+
+		var counter = 0;
+		
+		console.log(semesters)
+		for (i =0; i < semesters.length; i++){
+			var temp_array = [];
+         	for (j = 0; j < classes_offered.length; j++) {
+	    		var semester_name = classes_offered[j][0];
+	    		var class_name = classes_offered[j][1];
+	    		var semester_enrollment = classes_offered[j][5];	    		
+             
+	             // var classType = data3_OBJ[j].SCHEDULE_DESC;
+
+	             if (semester_name == semesters[i]) {
+	             	// console.log(semesters[i] + "  " + classes_offered[j][1] + " - " + classes_offered[j][5]);
+	             	temp_array[class_name] = (temp_array[class_name] > 0) ?  temp_array[class_name] + (semester_enrollment) : (semester_enrollment);
+	             	
+             	} else if (semester_name == semesters[i+1]){
+             		j = classes_offered.length - 1;
+             	}
+         	}
+         	classes_json[semesters[i]] = temp_array;
+
+         }
+
+         console.log(classes_json)
+         var values1 = d3.values(classes_json)
+
+         console.log(d3.values(classes_json))
+         console.log(d3.values(values1))
+         var max_val =[];
+
+         for (i =0; i<values1.length; i++){ 
+         	max_val.push(d3.max(d3.values(values1[i])))
+         }
+
+         console.log(max_val)
+
+         console.log(d3.max(max_val));
+
+         var max_students = d3.max(max_val);
+
+        //set canvas size 
+		var width = 1000,
+			height = 900;
 		var svgcanvas = d3.select("#chartContainer")
                         .append("svg")
                         .attr("width", width)
                         .attr("height", height)
                         .append("g");
+        //set up axis
+        var x = d3.scale.ordinal()
+        	.domain(d3.keys(classes_json))
+        	.rangeRoundBands([0, height], .25);
 
-		var x_values = d3.scale.linear()
-					.range([0, width]);
+        var xAxis = d3.svg.axis()
+        	.scale(x)
+        	.orient("bottom");
 
-		var y_values = d3.scale.linear()
-					.range([0, height]);
+        var y = d3.scale.linear()
+        	.domain([0, max_students])
+        	.range([height-150, 0]);
 
-		var xAxis = d3.svg.axis()
-    				.scale(x_values)
-    				.orient("bottom");
+        var yAxis = d3.svg.axis()
+        	.scale(y)
+        	.orient("left");
 
-    	var yAxis = d3.svg.axis()
-    				.scale(y_values)
-    				.orient("left");
+        //set color scale
+    	var colors = d3.scale.category10();
 
-    	var line = d3.svg.line()
-   	 				.x(function(d) { return x(d.max_enrollment); })
-    				.y(function(d) { return y(d.act_enrollment); });
+    	//drawing the axis
+    	var y_x_axis = height -150;
+    	d3.select("svg").append("g")
+        	.attr("class", "x axis")
+        	.attr("transform", "translate(30, " + y_x_axis + " )")
+        	.call(xAxis)
+        	.selectAll("text")  
+            	.style("text-anchor", "end")
+            	.attr("dx", "-.8em")
+            	.attr("dy", ".15em")
+            	.attr("transform", function(d) {
+                return "rotate(-65)" 
+                });
 
-    	var datajson = "{% url "graph_data" %}";
-    	console.log(datajson);
-		d3.json("{% url "graph_data" %}", function(error, data){
-			
-			data.forEach(function(d){
-				d.max_enrollment = +d.max_enrollment;
-				d.act_enrollment = +d.act_enrollment;
-			})
-		x_values.domain(d3.extent(data, function(d) { return d.max_enrollment; }));
+        d3.select("svg").append("g")
+        	.attr("class", "y axis")
+        	.attr("transform", "translate(30,0)")
+        	.call(yAxis)
+        	.append("text")
+     			.attr("class", "label")
+			    .attr("transform", "rotate(-90)")
+			    .attr("y", 6)
+			    .attr("dy", ".71em")
+			    .style("text-anchor", "end")
+			    .text("Number of Students");
 
-  		y_values.domain(d3.extent(data, function(d) { return d.act_enrollment; }));
 
-  		svg.append("g")
-      		.attr("class", "x_axis")
-      		.attr("transform", "translate(0," + height + ")")
-      		.call(xAxis);
 
-      	svg.append("g")
-		      .attr("class", "y_axis")
-		      .call(yAxis)
-		   .append("text")
-		      .attr("transform", "rotate(-90)")
-		      .attr("y", 6)
-		      .attr("dy", ".71em")
-		      .style("text-anchor", "end")
-		      .text("Play count");
 
-		svg.append("path")
-      		.datum(data)
-      		.attr("class", "line")
-      		.attr("d", line);
-		})	
 		</script>
 	</body>
 </html>

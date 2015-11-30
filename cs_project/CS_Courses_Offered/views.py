@@ -5,26 +5,35 @@ from .models import *
 from django.template import RequestContext
 from django.core import serializers
 
+import json
+
 # Create your views here.
 def index(request):
     return HttpResponse("Hello, world. You're at the CS page index.")
 
 def graph_data(request):
 	# get all data from offering model
+	# class_offered = Offering.objects.raw("SELECT * from Semester")
+	class_offered = Offering.objects.all()
+	semester_offered = Semester.objects.order_by('id')
 
-	class_offered = Offering.objects.filter( 
-    a_semester__id = 640  ).select_related()
+
 	# results = Semester.objects.include(field1__in=inner_qs)
 	# create a dictionary of allthe data in class_offered
-	data = serializers.serialize("json", class_offered)
 
 	offered = {
-		"semester_classes" : class_offered
+		"semester_classes" : class_offered,
+		"semesters": semester_offered
 	}
-	print(data)
-	# return JsonResponse(context_instance=RequestContext(request), 'graph/graphs.html', data, safe=False)
-	return render_to_response('graph/graphs.html', offered, context_instance=RequestContext(request))
 
+	semsters = {
+		"semesters": semester_offered
+	}
+	print(semester_offered)
+	# return JsonResponse(context_instance=RequestContext(request), 'graph/graphs.html', data, safe=False)
+	# return render_to_response('graph/graphs.html', semsters, context_instance=RequestContext(request))
+	return render_to_response('graph/graphs.html', offered, context_instance=RequestContext(request))
+	
 #this where I will tell what will be displayed. check out https://docs.djangoproject.com/en/1.8/intro/tutorial03/
 #view loads the data using ORM and calls templates
 
