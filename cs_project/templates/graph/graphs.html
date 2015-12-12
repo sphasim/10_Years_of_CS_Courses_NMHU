@@ -9,14 +9,11 @@
 	<body>
 		 <h1>Semester Offered</h1>
 		 <div id = "chartContainer"></div>
-		 <!-- {% for classes in semester_classes %}
-		 {{ classes.id }}, {{ classes.a_semester }}, {{ classes.a_course }}, {{ classes.crn_number }}, {{ classes.section_number }}, {{ classes.max_enrollment }}, {{ classes.act_enrollment }}<br>
-		 {% endfor %} -->
-<!-- 
-		 {% for semester in semesters %}
-		 	{{ semester.term_description }}<br>
+		 <!-- {% for classes in semester_classes1 %}
+		 {{ classes.id }}, {{ classes.a_semester }}, {{ classes.a_course }}, {{ classes.crn_number }}, {{ classes.section_number }}, {{ classes.max_enrollment }}, {{ classes.act_enrollment }}, {{ classes.course_type }}<br>
 		 {% endfor %} -->
 		 <script src="http://d3js.org/d3.v3.js"></script>
+         <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
 		<script>
 
 		var semesters = [];
@@ -25,95 +22,250 @@
 				 {% endfor %}
 
 		var classes_offered = [];
-				{% for classes in semester_classes %}
-		 		classes_offered.push(['{{ classes.a_semester }}', '{{ classes.a_course }}', {{ classes.crn_number }}, {{ classes.section_number }}, {{ classes.max_enrollment }}, {{ classes.act_enrollment }}])
+				{% for classes in semester_classes1 %}
+		 		classes_offered.push(['{{ classes.a_semester }}', '{{ classes.a_course }}', "{{ classes.course_type }}", {{ classes.crn_number }}, {{ classes.section_number }}, {{ classes.max_enrollment }}, {{ classes.act_enrollment }}, '{{ classes.a_semester }}'])
 		 		{% endfor %}
-		 console.log(classes_offered);
 
-		var classes_json = [];
+        console.log(classes_offered)
 
-		var counter = 0;
+        var class_type = [];
+            {% for type in classes_type %}
+                class_type.push('{{type.course_title}}')
+            {% endfor %}
+
+        // console.log(d3.csv.format(classes_offered))
+        data_csv = d3.csv.format(classes_offered)
+        // My header
+var headers = ["Semester","Title", "course_type", "crn_number","section_number","max_enrollment", "act_enrollment", "Semester1"].join(",");
+
+// First I get the file or URL data like text
+  // Then I add the header and parse to csv - returns json format
+  data_json = d3.csv.parse(headers +"\n"+ data_csv);
+  console.log(data_json)
+
+//declare our new array’s name will be data and we initiate the nest function;
+  var sum_courses = d3.nest()
+        .key(function(d) { return d.Semester;})
+        .key(function(d) { return d.Title;}) //assign the key for our new array as Title
+   //      .rollup(function(d) {return d3.sum(d, function(g) {return g.act_enrollment; });// include the rollup function that takes all the individual value variables that are in each unique tittlefield and sums them 
+   // })
+        .rollup(function(d) { return {"Act_enrol": d3.sum(d, function(g) {return g.act_enrollment; })};})
+        .entries(data_json);
+
+ 
+
+ // .rollup(function(leaves) { return {"length": leaves.length, "total_time": d3.sum(leaves, function(d) {return parseFloat(d.time);})} })
+console.log(sum_courses)
+
+// console.log(d3.values(sum_courses).map(function(d) {
+//     return d.key; 
+// }));
+
+var data_values = d3.values(sum_courses).map(function(d,i) { 
+    return d.values
+})
+console.log(data_values)
+var class_name = data_values.map(function(d) {return d.map(function(g){return g.key})})
+console.log(class_name)
+
+var dd = data_values.map(function(d) {return d.map(function(g){return g.values})})
+console.log(dd.map(function(d){return d.map(function(g){return g.Act_enrol})}))
+
+
+// console.log(d3.map( data_values ).entries())
+
+console.log(data_values.length)
+
+console.log(d3.max( data_values, function(d) { 
+        return d3.max( d, function(v) { return v.values } ) } ))
+
+// console.log(d3.max( data_values, function(d) { 
+//         return d3.max( d, function(v) { return v.values } ) } ))
+
+// console.log(d3.values(data_values).map(function(d){return d.map(function(v,i){return d.values})}))
+
+// var class_values = JSON.stringify(d3.values(data_values).map(function(d){return d.map(function(v,i){return v})}))
+// console.log(class_values)
+
+var class_values1 = d3.values(data_values).map(function(d){return d.map(function(v,i){return v})})
+// console.log(class_values1)
+// console.log(d3.values(class_values).map(function(d){return d.keys}))
+d3.values(data_values).map(function(d){return d.map(function(v,i){return d.values})})
+d3.values(data_values).map(function(d){return d.map(function(v,i){return d.values})})
+var sem_act_enrol = d3.values(data_values).map(function(d){return d.map(function(obj) { 
+    var rObj ={};
+    rObj["values"] = (obj.values);
+    rObj["keys"] = (obj.key);
+    return rObj;
+})})
+
+console.log(d3.entries(sem_act_enrol))
+
+// data_csv2 = d3.csv.format(class_values)
+// console.log(data_csv2)
+
+// var json_data_values = JSON.stringify(data_values)
+
+  //returns csv file
+  data = d3.csv.format(data_json)
+  // console.log(data)
+
+
+//go to data_json and get all semesters
+var sem_act_enrol = data_json.map(function(obj) { 
+    var rObj ={};
+    rObj[obj.Semester] = (obj.act_enrollment);
+    return rObj;
+})
+
+
+// console.log(sem_act_enrol)
+
+// var act_enrol= data_json.map(function(d) {return +d.act_enrollment});
+// // console.log(act_enrol)
+
+// 		var classes_json = [];
+
+// 		var counter = 0;
 		
-		console.log(semesters)
-		for (i =0; i < semesters.length; i++){
-			var temp_array = [];
-         	for (j = 0; j < classes_offered.length; j++) {
-	    		var semester_name = classes_offered[j][0];
-	    		var class_name = classes_offered[j][1];
-	    		var semester_enrollment = classes_offered[j][5];	    		
+// 		// console.log(semesters)
+// 		for (i =0; i < semesters.length; i++){
+// 			var temp_array = [];
+//          	for (j = 0; j < classes_offered.length; j++) {
+// 	    		var semester_name = classes_offered[j][0];
+// 	    		var class_name = classes_offered[j][1];
+// 	    		var semester_enrollment = classes_offered[j][5];	    		
              
-	             // var classType = data3_OBJ[j].SCHEDULE_DESC;
+// 	             // var classType = data3_OBJ[j].SCHEDULE_DESC;
 
-	             if (semester_name == semesters[i]) {
-	             	// console.log(semesters[i] + "  " + classes_offered[j][1] + " - " + classes_offered[j][5]);
-	             	temp_array[class_name] = (temp_array[class_name] > 0) ?  temp_array[class_name] + (semester_enrollment) : (semester_enrollment);
+// 	             if (semester_name == semesters[i]) {
+// 	             	temp_array[class_name] = (temp_array[class_name] > 0) ?  temp_array[class_name] + (semester_enrollment) : (semester_enrollment);
 	             	
-             	} else if (semester_name == semesters[i+1]){
-             		j = classes_offered.length - 1;
-             	}
-         	}
-         	classes_json[semesters[i]] = temp_array;
+//              	} else if (semester_name == semesters[i+1]){
+//              		j = classes_offered.length - 1;
+//              	}
+//          	}
+//          	classes_json[semesters[i]] = temp_array;
 
-         }
+//          }
 
-         console.log(classes_json)
-         var values1 = d3.values(classes_json)
+//          for (var i = 0; i < semesters.length; i++) {
+//             var current_semester = classes_json[semesters[i]];
+//             for (var j = 0; j < class_type.length; j++) {
+//                 var current_class = class_type[j];
+//                 // console.log(current_semester[current_class]);
+//                 // console.log(classes_json[semesters[i]][class_type[j]])
+//             };
+             
+//          };
+         
+//          // A way to look more easily across all 'inner' arrays
+         // var values1 = d3.values(classes_json)
 
-         console.log(d3.values(classes_json))
-         console.log(d3.values(values1))
-         var max_val =[];
+         // // console.log(d3.values(classes_json))
+         // // console.log(d3.entries(classes_json))
+         // // console.log(values1[0])
 
-         for (i =0; i<values1.length; i++){ 
-         	max_val.push(d3.max(d3.values(values1[i])))
-         }
 
-         console.log(max_val)
+         // var max_val =[];
+         // //semester arrays
+         // var keyss = d3.keys(classes_json);
+         //    // keyss.push(d3.keys(classes_json))
+         // // console.log(keyss)
 
-         console.log(d3.max(max_val));
+         // for (i =0; i<values1.length; i++){ 
+         // 	max_val.push(d3.max(d3.values(values1[i])))
+         //    // console.log(d3.keys(values1[i]))
 
-         var max_students = d3.max(max_val);
+         // }
+         // var arrays_in_values1 =[]
+
+         // for (i =0; i<values1.length; i++){ 
+         //    // arrays_in_values1.push(d3.values(values1[i]))
+         //    // console.log(d3.values(values1[i]))
+         //    for (var j = 0; j < d3.values(values1[i]).length; j++) {
+         //        console.log(d3.values(values1[i])[j])
+         //    };
+
+         // }
+
+         // console.log(arrays_in_values1)
+
+         // console.log(d3.values(d3.keys(d3.values(classes_json))));
+
+         // var max_students = d3.max(max_val);
 
         //set canvas size 
-		var width = 1000,
+		var width = 1400,
 			height = 900;
 		var svgcanvas = d3.select("#chartContainer")
-                        .append("svg")
+                        .append("svg")  
                         .attr("width", width)
                         .attr("height", height)
                         .append("g");
         //set up axis
         var x = d3.scale.ordinal()
-        	.domain(d3.keys(classes_json))
-        	.rangeRoundBands([0, height], .25);
+        	// .domain(sem)
+            // .domain(d3.keys(classes_json))
+        	.rangeRoundBands([30, width-400], .1)
+            .domain(data_json.map(function(d) { return d.Semester; }));
 
         var xAxis = d3.svg.axis()
         	.scale(x)
-        	.orient("bottom");
+        	.orient("bottom")
+            .ticks(20)
+            .outerTickSize(1);
 
         var y = d3.scale.linear()
-        	.domain([0, max_students])
-        	.range([height-150, 0]);
+        	// .domain([0, max_students])
+            // .domain([0, d3.max( values1, function(d) { 
+        // return d3.max( d, function(v,i) { return v } ) } )])
+        	.range([height-150, 0])
+            .nice()
+            .domain([0, d3.max(data_json, function(d) {return parseInt(d['act_enrollment'])})]);
+            
 
         var yAxis = d3.svg.axis()
         	.scale(y)
-        	.orient("left");
+        	.orient("left")
+            .ticks(16)
+            .outerTickSize(1);
 
+        var tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);   
+
+        var tip = d3.tip()
+              .attr('class', 'd3-tip')
+              .offset([-10, 0])
+              .html(function(d) {
+                return "<strong>"+d.Title+":</strong> <span style='color:red'>" + d.act_enrollment + "</span>";
+              })
+
+// don't want dots overlapping axis, so add in buffer to data domain
+
+  x.domain(data_json.map(function(d) { return d.Semester; }));
+
+  y.domain([0, d3.max(data_json, function(d) {return +(d['act_enrollment'])})+1]);
         //set color scale
-    	var colors = d3.scale.category10();
+        var cValue = function(d) { return d.Title;},
+    	       color = d3.scale.category20();
 
     	//drawing the axis
     	var y_x_axis = height -150;
     	d3.select("svg").append("g")
         	.attr("class", "x axis")
-        	.attr("transform", "translate(30, " + y_x_axis + " )")
+        	.attr("transform", "translate(0, " + y_x_axis + " )")
         	.call(xAxis)
         	.selectAll("text")  
             	.style("text-anchor", "end")
-            	.attr("dx", "-.8em")
-            	.attr("dy", ".15em")
+                .style("font-size", "13px") 
+            	.attr("dx", "-.8em")//relative coordinates (relative to the specified x and y)
+            	.attr("dy", "-1.00em")
             	.attr("transform", function(d) {
-                return "rotate(-65)" 
+                return "rotate(-80)" 
                 });
+        svgcanvas.call(tip);
 
         d3.select("svg").append("g")
         	.attr("class", "y axis")
@@ -126,6 +278,87 @@
 			    .attr("dy", ".71em")
 			    .style("text-anchor", "end")
 			    .text("Number of Students");
+
+        //addint title
+        svgcanvas.append("text")
+            .attr("x", (width / 2))             
+            .attr("y", 0 + 15)
+            .attr("class", "title")
+            .attr("text-anchor", "middle")  
+            .style("font-size", "16px") 
+            .style("text-decoration", "underline")  
+            .text("Computer Science Classes");
+
+        // draw dots
+  var dots=svgcanvas.selectAll(".dot")
+      .data(data_json)
+    .enter().append("circle")
+      .attr("class", "dot")
+      .attr("id", function(d) { return d.Title;})
+      .attr("r", 3)
+      // .attr("cx", 200)
+      .attr("cx", function(d) { return x(d.Semester);})
+// )
+      .attr("cy", function(d) { return y(d.act_enrollment);})
+      .style("fill", function(d) { return color(cValue(d));})
+      .on('mouseover', tip.show)
+      .on('mouseout', tip.hide) 
+      
+// var series = svgcanvas.selectAll( "g" )
+//     // convert the object to an array of d3 entries
+//     .data( d3.map( myData ).entries() )
+//     .enter()
+//     // create a container for each series
+//     .append("g")
+//     .attr( "id", function(d) { return "series-" + d.key } );
+    
+// series.selectAll( "circle" )
+//    // do a data join for each series' values
+//    .data( function(d) { return d.value } )
+//    .enter()
+//    .append("circle")
+//     .attr( "cx", function(d) { return x(d.X) } )
+//     .attr( "r", "10" )
+//     .attr( "cy", function(d) { return y(d.Y) } );
+
+var dots=svgcanvas.selectAll(".dot")
+      .data(dd.map(function(d){return d.map(function(g){return g.Act_enrol})}))
+    .enter().append("circle")
+      .attr("class", "dot")
+      // .attr("id", function(d) { return d.Title;})
+      .attr("r", 3)
+      // .attr("cx", 200)
+      // .attr( "cx", function(d) { return x(d.key) } )
+      // .attr("cy", )
+      // .attr( "cy", function(d) { return y(data_values.map(function(d) {return d.map(function(v) {return v.values})})) } )
+      .on('mouseover', tip.show)
+      .on('mouseout', tip.hide) 
+// // )
+//       .attr("cy", function(d) { return y(d.act_enrollment);})
+//       .style("fill", function(d) { return color(cValue(d));})
+      
+
+    var legend = svgcanvas.selectAll(".legend")
+      .data(color.domain())
+    .enter().append("g")
+      .attr("class", "legend")
+      .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; 
+    });
+
+   // draw legend colored rectangles
+  legend.append("rect")
+      .attr("x", width-20)
+      .attr("width", 18)
+      .attr("height", 18)
+      .style("fill", color);
+
+     // draw legend text
+  legend.append("text")
+      .attr("x", width - 40)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "end")
+      .text(function(d) { return d;})
 
 
 

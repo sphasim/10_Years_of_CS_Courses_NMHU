@@ -22,8 +22,8 @@ var y = d3.scale.linear().range([height/2 - 150, 0])
 var xAxis = d3.svg.axis()
     .scale(xScale)
     .orient("bottom")
-    .ticks(20)
-    .outerTickSize(0);
+    .ticks(2)
+    .outerTickSize(3);
 
 var yValue = function(d) { return d.ACTUAL_ENROLLMENT;}, // data -> value
     yScale = d3.scale.linear().range([height/2 - 150, 0]).nice(), // value -> display

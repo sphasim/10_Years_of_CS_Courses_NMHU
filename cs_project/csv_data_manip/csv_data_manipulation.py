@@ -7,6 +7,12 @@ print ("helo")
 # Offering.objects.all().delete()
 # Course.objects.all().delete()
 # Semester.objects.all().delete()
+
+# from csv_data_manip.csv_data_manipulation import *
+# GetCourseData()
+# GetSemesterData()
+# GetOfferingData()
+
 def GetCourseData():
     with open("CS_Actual_Enrollments.csv", "r") as data_open:
         #read the file using csv reader module.
@@ -22,7 +28,6 @@ def GetCourseData():
                 created = Course(
                     course_number = eval(row[4]),
                     course_title = row[7],
-                    course_type = row[6],
                     subject = row[3]
                     )
                 created.save()
@@ -61,6 +66,7 @@ def GetOfferingData():
                     a_course = course,
                     a_semester = semester,
                     crn_number = eval(row[2]),
+                    course_type = row[6],
                     section_number = row[5],
                     max_enrollment = eval(row[8]),
                     act_enrollment = eval(row[9])

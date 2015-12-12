@@ -15,7 +15,10 @@ def graph_data(request):
 	# get all data from offering model
 	# class_offered = Offering.objects.raw("SELECT * from Semester")
 	class_offered = Offering.objects.all()
+	class_offered1 = Offering.objects.filter(course_type = 'Lecture')
 	semester_offered = Semester.objects.order_by('id')
+	total_classes = Offering.objects.filter(course_type = 'Lecture')
+
 
 
 	# results = Semester.objects.include(field1__in=inner_qs)
@@ -23,13 +26,11 @@ def graph_data(request):
 
 	offered = {
 		"semester_classes" : class_offered,
-		"semesters": semester_offered
+		"semester_classes1" : class_offered1,
+		"semesters": semester_offered,
+		"classes_type": total_classes
 	}
-
-	semsters = {
-		"semesters": semester_offered
-	}
-	print(semester_offered)
+	# print(semester_offered)
 	# return JsonResponse(context_instance=RequestContext(request), 'graph/graphs.html', data, safe=False)
 	# return render_to_response('graph/graphs.html', semsters, context_instance=RequestContext(request))
 	return render_to_response('graph/graphs.html', offered, context_instance=RequestContext(request))

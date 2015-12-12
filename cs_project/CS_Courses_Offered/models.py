@@ -3,7 +3,6 @@ from django.db import models
 class Course(models.Model):
     course_number = models.PositiveIntegerField(unique = True)
     course_title = models.CharField(max_length=255)
-    course_type = models.CharField(max_length=255)
     subject = models.CharField(max_length=255)
     def __str__(self):
         return self.course_title
@@ -18,6 +17,7 @@ class Offering(models.Model):
     a_course = models.ForeignKey(Course)
     a_semester = models.ForeignKey(Semester)
     crn_number = models.PositiveIntegerField()
+    course_type = models.CharField(max_length=255)
     section_number = models.PositiveIntegerField()
     max_enrollment = models.PositiveIntegerField()
     act_enrollment = models.PositiveIntegerField()
